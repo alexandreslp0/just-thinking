@@ -25,7 +25,7 @@ def get_db():
 #
 # while True:
 #     try:
-#         conn = psycopg2.connect(host="", database="", user="", password="", 
+#         conn = psycopg2.connect(host="host", database="", user="", password="", 
 #                                 cursor_factory=RealDictCursor)
 #         cursor = conn.cursor()
 #         print("Database connection was successful.")
