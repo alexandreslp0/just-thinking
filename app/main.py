@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from . import models
 from .database import engine
 from .routers import post, user, auth
 
@@ -24,7 +23,7 @@ app.include_router(auth.router)
 
 @app.get("/")
 def root():
-    return "Hello world!"
+    return "Hello world final one i promisse!"
 
 
 
