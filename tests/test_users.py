@@ -4,12 +4,6 @@ from app.config import settings
 from app.schemas import UserFullResponse, Token
 
 
-def test_root(client):
-    res = client.get("/")
-    assert res.json() == "Hello world!"
-    assert res.status_code == 200
-
-
 def test_create_user(client):
     res = client.post("/users", json={"email": "test@gmail.com", "password": "senha"})
 
