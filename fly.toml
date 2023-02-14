@@ -8,6 +8,9 @@ processes = []
 [deploy]
   release_command = "alembic upgrade head"
 
+[build]
+  image = "alexandreslp0/just-thinking:latest"
+
 [experimental]
   auto_rollback = true
 
