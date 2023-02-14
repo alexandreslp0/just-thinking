@@ -1,6 +1,7 @@
 from fastapi import Response, status, HTTPException, Depends
 from typing import List, Optional
 from sqlalchemy.orm import Session
+from sqlalchemy import text, func
 
 from ..router import APIRouter
 from .. import models, schemas, oauth2
@@ -12,35 +13,49 @@ router = APIRouter(
 )
 
 @router.get("/", response_model=List[schemas.PostFullResponse])
-def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user),
-              limit: int = 10, search: Optional[str] = ""):
-    # cursor.execute("""SELECT * FROM posts;""")
-    # posts = cursor.fetchall()
-    posts = db.query(models.PostTable).filter(models.PostTable.title.contains(search)).limit(limit).all()
-    return posts
+def get_posts(db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user), 
+                                                                    limit: int = 10, search: Optional[str] = ""):
+
+    posts_query = db.query(models.PostTable, func.count(models.CommentsTable.post_id).label("comments")).join(
+        models.CommentsTable, models.CommentsTable.post_id == models.PostTable.id, isouter=True).group_by(
+            models.PostTable.id).filter(models.PostTable.title.contains(search)).limit(limit)
+
+    posts_list = [{"id": post[0].id,
+                   "title": post[0].title,
+                   "content": post[0].content,
+                   "published": post[0].published,
+                   "created_at": post[0].created_at,
+                   "owner": post[0].owner,
+                   "comments": post[1]} for post in posts_query]
+
+
+    return posts_list
 
 
 @router.get("/{id}", response_model=schemas.PostFullResponse)
 def get_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    # cursor.execute("""SELECT * FROM posts WHERE id = %s""", (id,))
-    # post = cursor.fetchone()
-    post = db.query(models.PostTable).filter(models.PostTable.id == id).first()
+
+    post = db.query(models.PostTable, func.count(models.CommentsTable.post_id).label("comments")).join(
+        models.CommentsTable, models.CommentsTable.post_id == models.PostTable.id, isouter=True).group_by(
+            models.PostTable.id).filter(models.PostTable.id == id).first()
 
     if not post:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail=f"post with id {id} was not found")
-    
-    return post
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"post with id {id} was not found")
+
+    post_dict = {"id": post[0].id,
+                 "title": post[0].title,
+                 "content": post[0].content,
+                 "published": post[0].published,
+                 "created_at": post[0].created_at,
+                 "owner": post[0].owner,
+                 "comments": post[1]}
+
+    return post_dict
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostFullResponse)
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=schemas.PostCreateResponse)
 def create_post(post: schemas.PostBase, 
                 db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    # cursor.execute("""INSERT INTO posts (title, content, published) VALUES (%s, %s, %s) 
-    #                   RETURNING *;""", (post.title, post.content, post.published))
-    
-    # new_post = cursor.fetchone()
-    # conn.commit()
 
     new_post = models.PostTable(owner_id = current_user.id, **post.dict())
     db.add(new_post)
@@ -51,9 +66,6 @@ def create_post(post: schemas.PostBase,
 
 @router.delete("/{id}")
 def delete_post(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    # cursor.execute("""DELETE FROM posts WHERE id = %s RETURNING *;""", (id,))
-    # deleted_post = cursor.fetchone()
-    # conn.commit()
     post_query = db.query(models.PostTable).filter(models.PostTable.id == id)
     post = post_query.first()
 
@@ -71,13 +83,10 @@ def delete_post(id: int, db: Session = Depends(get_db), current_user: int = Depe
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
-@router.put("/{id}", response_model=schemas.PostFullResponse)
-def update_post(id: int, post_new_data: schemas.PostBase, 
+@router.put("/{id}", response_model=schemas.PostCreateResponse)
+def update_post(id: int, post_new_data: schemas.PostUpdateBase, 
                 db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    # cursor.execute("""UPDATE posts SET title = %s, content = %s, published = %s WHERE id = %s RETURNING *;""",
-    #                (post.title, post.content, post.published, id))
-    # updated_post = cursor.fetchone()
-    # conn.commit()
+                
     post_query = db.query(models.PostTable).filter(models.PostTable.id == id)
     post = post_query.first()
 
@@ -92,3 +101,17 @@ def update_post(id: int, post_new_data: schemas.PostBase,
     post_query.update(post_new_data.dict(), synchronize_session=False)
     db.commit()
     return post_query.first()
+
+
+@router.get("/{id}/comments", response_model=List[schemas.CommentFullResponse])
+def get_post_comments(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
+    
+    post = db.query(models.PostTable).filter(models.PostTable.id == id).first()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail=f"post with id {id} was not found")
+
+    comments = db.query(models.CommentsTable).filter(models.CommentsTable.post_id == post.id).all()
+
+    return comments

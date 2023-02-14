@@ -1,1 +1,7 @@
+__pycache__
+venv/
+.env
+Dockerfile
+.dockerignore
+.pytest_cache
 fly.toml
