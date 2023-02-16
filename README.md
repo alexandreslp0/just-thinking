@@ -1,6 +1,6 @@
 # JustThinking
 
-JustThinking is a simple social media API template that can be used to create posts and comments by registered users. It was created as a side project to  sharpen my Python, API's and CI/CD skills.
+JustThinking is a social media API that can be used to create posts and comments by registered users. It was created as a side project to  sharpen my Python, API's and CI/CD skills.
 
 # Documentation
 
