@@ -24,3 +24,4 @@ After that use the login endpoint which return a access token with 30 minutes to
 
 # Example usage in swagger
 
+[justthinking_example.webm](https://user-images.githubusercontent.com/83092575/219463387-6898f439-56ed-4f43-9daa-3163e9044fbb.webm)
