@@ -1,7 +1,6 @@
 # JustThinking
 
-JustThinking is a simple social media API template where you can create users, posts and comments. 
-It was created as a side project for training my Python, API's and CI/CD skills.
+JustThinking is a simple social media API template that can be used to create posts and comments by registered users. It was created as a side project to  sharpen my Python, API's and CI/CD skills.
 
 # Documentation
 
@@ -22,6 +21,6 @@ JustThinking uses OAuth2 as authentication protocol for posts and comments endpo
 So first you need to already have a user or create a new one using users endpoint.
 After that use the login endpoint which return a access token with 30 minutes to expire.
 
-# Example usage in swagger
+Example usage in swagger:
 
 [justthinking_example.webm](https://user-images.githubusercontent.com/83092575/219463387-6898f439-56ed-4f43-9daa-3163e9044fbb.webm)
